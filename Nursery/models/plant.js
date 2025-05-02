@@ -21,6 +21,10 @@ const plantSchema=new mongoose.Schema({
         type:String,
         enum:['seed', 'seedling', 'young', 'mature'],
         default:'seed'
+    },
+    isAlive:{
+        type:Boolean,
+        default:true
     }
 },{
     timestamps:true
