@@ -1,12 +1,16 @@
 import express from "express";
-import { getPlantData, newPlant, waterPlant } from "../controllers/plantController.js";
+import { addFertilizer, getPlantData, harvest, newPlant, waterPlant } from "../controllers/plantController.js";
 
 const router=express.Router();
 
 router.post("/plant",newPlant);
 
-router.put("/plant/:id/water",waterPlant);
+router.patch("/plant/:id/water",waterPlant);
 
 router.get("/plant/:id",getPlantData);
+
+router.patch("/plant/:id/fertilize", addFertilizer);
+
+router.patch("/plant/:id/harvest",harvest);
 
 export default router;

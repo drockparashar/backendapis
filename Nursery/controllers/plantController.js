@@ -1,5 +1,6 @@
-import { get } from "mongoose";
 import Plant from "../models/plant.js";
+import { getUnit } from "../utils/getUnit.js";
+import { growthStage } from "../utils/growthStage.js";
 
 export async function newPlant(req,res) {
     const species = req.body.species.toLowerCase();
@@ -19,10 +20,14 @@ export async function waterPlant(req,res) {
 
     try{
         const getPlant=await Plant.findById({_id});
-
+        if(getPlant.isHarvested)return res.status(200).json({message:"Plant has already been harvested"});
         if (!getPlant.isAlive) {
-            return res.status(200).json({ message: "Your plant is already dead.", plant });
+            return res.status(200).json({ message: "Your plant is already dead.", getPlant });
         }
+
+        getPlant.growthProgress=getUnit(getPlant.growthProgress,getPlant.lastGrowthStage,getPlant.growthRate);
+        getPlant.growthStage=growthStage(getPlant.growthProgress);
+        getPlant.lastGrowthStage=Date.now();
 
         const timeELapsed=Math.floor(((Date.now()-getPlant.lastWateredDate)/(1000*60*60))/24);
         getPlant.health=getPlant.health-(10*timeELapsed);
@@ -50,10 +55,16 @@ export async function getPlantData(req,res) {
     try{
         const plant=await Plant.findById({_id});
 
+        if(plant.isHarvested)return res.status(200).json({message:"Plant has already been harvested"});
+
         const timeELapsed=Math.floor(((Date.now()-plant.lastWateredDate)/(1000*60*60*24)));
         plant.health = Math.max(plant.health - 10 * timeELapsed, 0);
 
         if(plant.health<=0)plant.isAlive=false;
+
+        plant.growthProgress=getUnit(plant.growthProgress,plant.lastGrowthStage,plant.growthRate);
+        plant.growthStage=growthStage(plant.growthProgress);
+        plant.lastGrowthStage=Date.now();
 
         await plant.save();
 
@@ -65,3 +76,57 @@ export async function getPlantData(req,res) {
     }
 }
 
+export async function addFertilizer(req,res){
+    const _id=req.params.id;
+
+    if(!_id)return res.status(400).json({message:"Enter valid plant id"});
+    
+    try{
+        const plant=await Plant.findById({_id});
+
+        if(plant.isHarvested)return res.status(200).json({message:"Plant has already been harvested"});
+
+        const timeELapsed=Math.floor(((Date.now()-plant.lastWateredDate)/(1000*60*60*24)));
+        plant.health = Math.max(plant.health - 10 * timeELapsed, 0);
+
+        if(plant.health<=0)plant.isAlive=false;
+
+        plant.growthProgress=getUnit(plant.growthProgress,plant.lastGrowthStage,plant.growthRate);
+        plant.growthStage=growthStage(plant.growthProgress);
+        plant.lastGrowthStage=Date.now();
+
+        plant.growthRate+=0.25;
+        plant.health=Math.min(plant.health+40,100);
+
+        await plant.save();
+
+        if(plant.isAlive) return res.status(200).json({plant});
+        return res.status(200).json({message:"Fertilized plant successfully!",plant});
+
+
+    }catch(err){
+        return res.status(400).json({message:"Couldn't fertilize plant",err});
+    }
+}
+
+export async function harvest(req,res){
+    const _id=req.params.id;
+
+    if(!_id)return res.status(400).json({message:"Enter valid plant id"});
+    
+    try{
+
+        const plant=await Plant.findById({_id});
+
+        if(plant.isHarvested)return res.status(200).json({message:"Plant has already been harvested"});
+
+        plant.isHarvested=true;
+
+        await plant.save();
+        
+        return res.status(200).json({message:"Harvested plant successfully!",plant});
+
+    }catch(err){
+        return res.status(400).json({message:"Couldn't harvest plant",err});
+    }
+}
