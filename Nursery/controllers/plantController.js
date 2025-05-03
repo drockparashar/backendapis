@@ -97,6 +97,7 @@ export async function addFertilizer(req,res){
 
         plant.growthRate+=0.25;
         plant.health=Math.min(plant.health+40,100);
+        plant.lastWateredDate=Date.now();
 
         await plant.save();
 
@@ -120,10 +121,16 @@ export async function harvest(req,res){
 
         if(plant.isHarvested)return res.status(200).json({message:"Plant has already been harvested"});
 
+        plant.growthProgress=getUnit(plant.growthProgress,plant.lastGrowthStage,plant.growthRate);
+        plant.growthStage=growthStage(plant.growthProgress);
+        plant.lastGrowthStage=Date.now();
+
+        if(plant.growthStage!='mature')return res.status(400).json({message:"Can't harvest the plant until it's mature",err});
+
         plant.isHarvested=true;
 
         await plant.save();
-        
+
         return res.status(200).json({message:"Harvested plant successfully!",plant});
 
     }catch(err){
