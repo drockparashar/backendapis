@@ -47,6 +47,15 @@ export async function waterPlant(req,res) {
     }
 }
 
+export async function getAllPlants(params) {
+    try{
+        const plants= await Plant.find({});
+        return res.status(200).json({plants})
+    }catch(err){
+        res.status(400).json({message:"Error fetching plants !"})
+    }
+}
+
 export async function getPlantData(req,res) {
     const _id=req.params.id;
 
