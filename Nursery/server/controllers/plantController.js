@@ -35,7 +35,7 @@ export async function waterPlant(req,res) {
         if(getPlant.health<=0){
             getPlant.isAlive=false;
             await getPlant.save();
-            return res.status(200).json({message:"Your plant died",Plant});
+            return res.status(200).json({message:"Your plant died",getPlant});
         }
 
         getPlant.health=Math.min(getPlant.health+20,100);
@@ -47,7 +47,7 @@ export async function waterPlant(req,res) {
     }
 }
 
-export async function getAllPlants(params) {
+export async function getAllPlants(req,res) {
     try{
         const plants= await Plant.find({});
         return res.status(200).json({plants})
