@@ -34,10 +34,16 @@ export default function PlantsPage() {
       try {
         const plants = await getAllPlants(); // `getAllPlants` already validates the response
         setPlants(plants);
-      } catch (error: any) {
-        console.error('Error fetching plants:', error); // Log error for debugging
-        setError(error.message || 'An unexpected error occurred');
-        showToast(error.message || 'An unexpected error occurred', 'error');
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error('Error fetching plants:', error); // Log error for debugging
+          setError(error.message || 'An unexpected error occurred');
+          showToast(error.message || 'An unexpected error occurred', 'error');
+        } else {
+          console.error('Unknown error:', error);
+          setError('An unexpected error occurred');
+          showToast('An unexpected error occurred', 'error');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -59,14 +65,14 @@ export default function PlantsPage() {
       </div>
 
       {isLoading ? (
-        <Loading /> // Optionally replace with a skeleton loader
+        <Loading />
       ) : error ? (
         <div className="bg-red-50 p-4 rounded-md text-red-600">
           Error: {error}. Please try again later.
         </div>
       ) : plants.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-600 mb-4">You don't have any plants yet.</p>
+          <p className="text-gray-600 mb-4">You don&apos;t have any plants yet.</p>
           <Link 
             href="/plants/new"
             className="btn btn-primary"
