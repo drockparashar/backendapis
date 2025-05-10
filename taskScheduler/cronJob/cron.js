@@ -1,30 +1,36 @@
 import Process from "../models/Process.js";
+
 export async function cron(req, res) {
   try {
     const now = new Date();
 
-    const tomorrowStart = new Date(now);
-    tomorrowStart.setDate(now.getDate() + 1);
-    tomorrowStart.setHours(0, 0, 0, 0); // Start of tomorrow
+    // IST offset in minutes (+5:30 = 330 mins)
+    const IST_OFFSET = 330; 
 
-    const tomorrowEnd = new Date(tomorrowStart);
-    tomorrowEnd.setHours(23, 59, 59, 999); // End of tomorrow
+    // Current IST time
+    const nowIST = new Date(now.getTime() + IST_OFFSET * 60000);
 
-    const processes = await Process.find({});
+    // Get tomorrow's IST date
+    const tomorrow = new Date(nowIST);
+    tomorrow.setDate(nowIST.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // Start of tomorrow in IST
 
-    const dueProcesses = processes.filter((process) => {
-      return process.status != "completed" && new Date(process.dueDate) > now;
+    // Tomorrow start and end in IST
+    const tomorrowStartIST = new Date(tomorrow);
+    const tomorrowEndIST = new Date(tomorrow);
+    tomorrowEndIST.setHours(23, 59, 59, 999); // End of tomorrow in IST
+
+    // Convert IST start/end back to UTC for MongoDB query
+    const tomorrowStartUTC = new Date(tomorrowStartIST.getTime() - IST_OFFSET * 60000);
+    const tomorrowEndUTC = new Date(tomorrowEndIST.getTime() - IST_OFFSET * 60000);
+
+    const processes = await Process.find({
+      status: { $ne: 'completed' },
+      dueDate: { $gte: tomorrowStartUTC, $lte: tomorrowEndUTC }
     });
 
-    const dueTommrow = dueProcesses.filter((process) => {
-        const dueDate=process.dueDate;
-        return dueDate>=tomorrowStart && dueDate<=tomorrowEnd;
-    });
-
-    return res.status(200).json({message:"Tasks due tommrow:", dueTommrow});
+    return res.status(200).json({ message: "Tasks due tomorrow (IST):", dueTommrow: processes });
   } catch (err) {
-    return res
-      .status(400)
-      .json({ message: "Couldn't execute cron job", error: err.message });
+    return res.status(400).json({ message: "Couldn't execute cron job", error: err.message });
   }
 }
