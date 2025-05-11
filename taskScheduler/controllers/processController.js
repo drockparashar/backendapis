@@ -19,6 +19,8 @@ export async function getAllTasks(req,res) {
     try{
         const processes=await Process.find({});
 
+        console.log("All taska fetched");
+
         return res.status(200).json({message:"All processes fetched",processes});
     }catch(err){
         return res.status(400).json({message:"Couldn't get processes"})
