@@ -38,7 +38,7 @@ export async function cron(req, res) {
   .map((task) => `Title: ${task.title}\nDescription: ${task.description}`)
   .join("\n\n");
 
-    sendEmail('gaganraghav143@gmail.com','Tasks due tommmrow',result)
+    sendEmail('pranshu2003parashar@gmail.com','Tasks due tommmrow',result)
 
     return res
       .status(200)
