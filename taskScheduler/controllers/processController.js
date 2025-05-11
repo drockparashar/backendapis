@@ -114,3 +114,8 @@ export async function getDueTasks(req,res) {
         return res.status(400).json({message:"Couldn't get processes",error:err.message})
     }
 }
+
+export async function callback(req,res) {
+    console.log("Hii");
+    return res.json({message:"Hii"});
+}
