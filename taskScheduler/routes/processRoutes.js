@@ -10,7 +10,7 @@ router.get('/tasks',getAllTasks);
 
 router.get('/tasks/due',getDueTasks);
 
-router.get("/tasks/cron", cron);
+router.get("/tasks/job/cron", cron);
 
 router.get('/tasks/:id',getTask);
 
